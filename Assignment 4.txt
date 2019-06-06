@@ -1,0 +1,376 @@
+#Chap 11 - Ex 1
+
+import re
+
+exp = input('Enter regular expression: ')
+
+count = 0
+fhandle = open('mbox-short.txt')
+
+for line in fhandle:
+    if not re.search(exp, line): continue
+    count += 1
+print(f'mbox-short.txt had {count} lines that matched {exp}')
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#output
+
+Enter regular expression: ^From 
+mbox-short.txt had 27 lines that matched ^From 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Chap 11 - Ex 2
+
+
+fname = input('Enter file: ')
+try:
+    fhandle = open(fname)
+except:
+    print(f'File cannot be opened: {fname}')
+    exit()
+
+numbers = []
+# for line in fhandle:
+#     if not re.search('^New Revision: ', line): continue
+#     numbers.append(float(re.findall(': (\d*)', line)[0]))
+# print(f'Average: {sum(numbers)/len(numbers):.2f}')
+for line in fhandle:
+    try:
+        numbers.append(float(re.findall('^New Revision: (\d+)', line)[0]))
+    except: continue
+print(f'Average: {sum(numbers)/len(numbers):.2f}')
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Output
+
+Enter file: mbox-short.txt
+Average: 39756.93
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Chap 12 - Ex 1
+
+import socket
+import re
+
+#http://data.pr4e.org/romeo.txt
+url = input('Enter URL: ')
+mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    mysock.connect((re.findall('http[s]?://([a-zA-Z0-9\.]*)/?', url)[0], 80))
+except:
+    print('URL not valid')
+    exit()
+cmd = f'GET {url} HTTP/1.0\r\n\r\n'.encode()
+mysock.send(cmd)
+while True:
+    data = mysock.recv(512)
+    if len(data) < 1:
+        break
+    print(data.decode(),end='')
+mysock.close()
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#output
+
+Enter URL: http://data.pr4e.org/romeo.txt
+HTTP/1.1 200 OK
+Date: Sat, 01 Jun 2019 01:12:58 GMT
+Server: Apache/2.4.18 (Ubuntu)
+Last-Modified: Sat, 13 May 2017 11:22:22 GMT
+ETag: "a7-54f6609245537"
+Accept-Ranges: bytes
+Content-Length: 167
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: Wed, 11 Jan 1984 05:00:00 GMT
+Connection: close
+Content-Type: text/plain
+
+But soft what light through yonder window breaks
+It is the east and Juliet is the sun
+Arise fair sun and kill the envious moon
+Who is already sick and pale with grief
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Chap 12 - Ex 2
+
+#http://data.pr4e.org/romeo.txt
+#http://data.pr4e.org/mbox.txt
+
+import socket
+import re
+
+mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+url = input('Enter URL: ')
+
+try:
+    mysock.connect((re.findall('http[s]?://([a-zA-Z0-9\.]*)/?', url)[0], 80))
+except:
+    print('URL invalid')
+    exit()
+    
+cmd = f'GET {url} HTTP/1.0\r\n\r\n'.encode()
+mysock.send(cmd)
+totalSize = 0
+printSize = 0
+while True:
+    data = mysock.recv(512).decode().rstrip()
+    if len(data) < 1:
+        break
+    if (printSize + len(data)) <= 3000:
+        print(data,end='')
+        printSize += len(data)
+#         print(f'<= 3k: {printSize}')
+    else:
+        if printSize < 3000:
+            print(data[:3000-printSize])
+            printSize += len(data)
+            print('\nEnd of 3,000 characters')
+#             print(f'> 3k: {printSize}')
+    totalSize += len(data)
+print(f'\n\nTotal of {totalSize:,} characters in the document.')
+mysock.close()
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Output
+
+Enter URL: http://data.pr4e.org/mbox.txt
+HTTP/1.1 200 OK
+Date: Sat, 01 Jun 2019 02:46:12 GMT
+Server: Apache/2.4.18 (Ubuntu)
+Last-Modified: Sat, 13 May 2017 11:22:22 GMT
+ETag: "66091a-54f6609245537"
+Accept-Ranges: bytes
+Content-Length: 6687002
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: Wed, 11 Jan 1984 05:00:00 GMT
+Connection: close
+Content-Type: text/plain
+
+From stephen.marquard@uct.ac.za Sat Jan  5 09:14:16 2008
+Return-Path: <postmaster@collab.sakaiproject.org>
+Received: from murder (mail.umich.edu [141.211.14.90])
+	 by frankenstein.mail.umich.edu (Cyrus v2.3.8) with LMTPA;
+	 Sat, 05 Jan 2008 09:14:16 -0500
+X-Sieve: CMU Sieve 2.3
+Received: from murder ([unix socket])
+	 by mail.umich.edu (Cyrus v2.2.12) with LMTPA;
+	 Sat, 05 Jan 2008 09:14:16 -0500
+Received: from holes.mr.itd.umich.edu (holes.mr.itd.umich.edu [141.211.14.79])
+	by flawless.mail.umich.edu () with ESMTP id m05EEFR1013674;
+	Sat, 5 Jan 2008 09:14:15 -0500
+Received: FROM paploo.uhi.ac.uk (app1.prod.collab.uhi.ac.uk [194.35.219.184])
+	BY holes.mr.itd.umich.edu ID 477F90B0.2DB2F.12494 ; 
+	 5 Jan 2008 09:14:10 -0500
+Received: from paploo.uhi.ac.uk (localhost [127.0.0.1])
+	by paploo.uhi.ac.uk (Postfix) with ESMTP id 5F919BC2F2;
+	Sat,  5 Jan 2008 14:10:05 +0000 (GMT)
+Message-ID: <200801051412.m05ECIaH010327@nakamura.uits.iupui.edu>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Received: from prod.collab.uhi.ac.uk ([194.35.219.182])
+          by paploo.uhi.ac.uk (JAMES SMTP Server 2.1.3) with SMTP ID 899
+          for <source@collab.sakaiproject.org>;
+          Sat, 5 Jan 2008 14:09:50 +0000 (GMT)
+Received: from nakamura.uits.iupui.edu (nakamura.uits.iupui.edu [134.68.220.122])
+	by shmi.uhi.ac.uk (Postfix) with ESMTP id A215243002
+	for <source@collab.sakaiproject.org>; Sat,  5 Jan 2008 14:13:33 +0000 (GMT)
+Received: from nakamura.uits.iupui.edu (localhost [127.0.0.1])
+	by nakamura.uits.iupui.edu (8.12.11.20060308/8.12.11) with ESMTP id m05ECJVp010329
+	for <source@collab.sakaiproject.org>; Sat, 5 Jan 2008 09:12:19 -0500
+Received: (from apache@localhost)
+	by nakamura.uits.iupui.edu (8.12.11.20060308/8.12.11/Submit) id m05ECIaH010327
+	for source@collab.sakaiproject.org; Sat, 5 Jan 2008 09:12:18 -0500
+Date: Sat, 5 Jan 2008 09:12:18 -0500
+X-Authentication-Warning: nakamura.uits.iupui.edu: apache set sender to stephen.marquard@uct.ac.za using -f
+To: source@collab.sakaiproject.org
+From: stephen.marquard@uct.ac.za
+Subject: [sakai] svn commit: r39772 - content/branches/sakai_2-5-x/content-impl/impl/src/java/org/sakaiproject/content/impl
+X-Content-Type-Outer-Envelope: text/plain; charset=UTF-8
+X-Content-Type-Message-Body: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8
+X-DSPAM-Result: Innocent
+X-DSPAM-Processed: Sat Jan  5 09:14:16 2008
+X-DSPAM-Confidence: 0.8475
+X-DSPAM-Probability: 0.0000
+
+Details: http://source.sakaiproject.org/viewsvn/?view=rev&rev=39772
+
+Author: stephen.marquard@uct.ac.za
+Date: 2008-01-05 09:12:07 -0500 (Sat, 05 Jan 2008)
+New Revision: 39772
+
+End of 3,000 characters
+
+
+Total of 6,685,257 characters in the document.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Chap 12 - Ex 3
+
+
+#http://data.pr4e.org/romeo.txt
+#http://data.pr4e.org/mbox.txt
+
+import urllib.request
+
+url = input('Enter URL: ')
+try:
+    fhandle = urllib.request.urlopen(url)
+except:
+    print('URL invalid')
+    exit()
+printSize = 0
+totalSize = 0
+for line in fhandle:
+    line = line.decode().rstrip()
+    if printSize + len(line) <= 3000:
+        print(line)
+        printSize += len(line)
+    else:
+        if printSize < 3000:
+            print(line[:3000-printSize])
+            printSize += len(line)
+            print(f'\nEnd of 3,000 characters.')
+    totalSize += len(line)
+print(f'Total of {totalSize:,} characters in the document.')
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#output
+
+Enter URL: http://data.pr4e.org/mbox.txt
+From stephen.marquard@uct.ac.za Sat Jan  5 09:14:16 2008
+Return-Path: <postmaster@collab.sakaiproject.org>
+Received: from murder (mail.umich.edu [141.211.14.90])
+	 by frankenstein.mail.umich.edu (Cyrus v2.3.8) with LMTPA;
+	 Sat, 05 Jan 2008 09:14:16 -0500
+X-Sieve: CMU Sieve 2.3
+Received: from murder ([unix socket])
+	 by mail.umich.edu (Cyrus v2.2.12) with LMTPA;
+	 Sat, 05 Jan 2008 09:14:16 -0500
+Received: from holes.mr.itd.umich.edu (holes.mr.itd.umich.edu [141.211.14.79])
+	by flawless.mail.umich.edu () with ESMTP id m05EEFR1013674;
+	Sat, 5 Jan 2008 09:14:15 -0500
+Received: FROM paploo.uhi.ac.uk (app1.prod.collab.uhi.ac.uk [194.35.219.184])
+	BY holes.mr.itd.umich.edu ID 477F90B0.2DB2F.12494 ;
+	 5 Jan 2008 09:14:10 -0500
+Received: from paploo.uhi.ac.uk (localhost [127.0.0.1])
+	by paploo.uhi.ac.uk (Postfix) with ESMTP id 5F919BC2F2;
+	Sat,  5 Jan 2008 14:10:05 +0000 (GMT)
+Message-ID: <200801051412.m05ECIaH010327@nakamura.uits.iupui.edu>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Received: from prod.collab.uhi.ac.uk ([194.35.219.182])
+          by paploo.uhi.ac.uk (JAMES SMTP Server 2.1.3) with SMTP ID 899
+          for <source@collab.sakaiproject.org>;
+          Sat, 5 Jan 2008 14:09:50 +0000 (GMT)
+Received: from nakamura.uits.iupui.edu (nakamura.uits.iupui.edu [134.68.220.122])
+	by shmi.uhi.ac.uk (Postfix) with ESMTP id A215243002
+	for <source@collab.sakaiproject.org>; Sat,  5 Jan 2008 14:13:33 +0000 (GMT)
+Received: from nakamura.uits.iupui.edu (localhost [127.0.0.1])
+	by nakamura.uits.iupui.edu (8.12.11.20060308/8.12.11) with ESMTP id m05ECJVp010329
+	for <source@collab.sakaiproject.org>; Sat, 5 Jan 2008 09:12:19 -0500
+Received: (from apache@localhost)
+	by nakamura.uits.iupui.edu (8.12.11.20060308/8.12.11/Submit) id m05ECIaH010327
+	for source@collab.sakaiproject.org; Sat, 5 Jan 2008 09:12:18 -0500
+Date: Sat, 5 Jan 2008 09:12:18 -0500
+X-Authentication-Warning: nakamura.uits.iupui.edu: apache set sender to stephen.marquard@uct.ac.za using -f
+To: source@collab.sakaiproject.org
+From: stephen.marquard@uct.ac.za
+Subject: [sakai] svn commit: r39772 - content/branches/sakai_2-5-x/content-impl/impl/src/java/org/sakaiproject/content/impl
+X-Content-Type-Outer-Envelope: text/plain; charset=UTF-8
+X-Content-Type-Message-Body: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8
+X-DSPAM-Result: Innocent
+X-DSPAM-Processed: Sat Jan  5 09:14:16 2008
+X-DSPAM-Confidence: 0.8475
+X-DSPAM-Probability: 0.0000
+
+Details: http://source.sakaiproject.org/viewsvn/?view=rev&rev=39772
+
+Author: stephen.marquard@uct.ac.za
+Date: 2008-01-05 09:12:07 -0500 (Sat, 05 Jan 2008)
+New Revision: 39772
+
+Modified:
+content/branches/sakai_2-5-x/content-impl/impl/src/java/org/sakaiproject/content/impl/ContentServiceSqlOracle.java
+content/branches/sakai_2-5-x/content-impl/impl/src/java/org/sakaiproject/content/impl/DbContentService.java
+Log:
+SAK-12501 merge to 2-5-x: r39622, r39624:5, r39632:3 (resolve conflict from differing linebreaks for r39622)
+
+----------------------
+This automatic notification message was sent by Sakai Collab (htt
+
+End of 3,000 characters.
+Total of 6,552,980 characters in the document.
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Chap 12 - Ex 4
+
+
+#https://www.cbc.ca/news/canada/wildfires-canada-alberta-bc-ontario-first-nations-1.5157637
+import urllib.request, urllib.parse, urllib.error
+
+from bs4 import BeautifulSoup
+import ssl
+import re
+# Ignore SSL certificate errors
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+url = input('Enter - ')
+html = urllib.request.urlopen(url, context=ctx).read()
+soup = BeautifulSoup(html, 'html.parser')
+
+# Retrieve all of the anchor tags
+tags = soup('p')
+print(f'Number of tags \'<p>\' {len(tags)}')
+# for tag in tags:
+#     print(tag.get('href', None))
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#output
+
+Enter - https://www.cbc.ca/news/canada/wildfires-canada-alberta-bc-ontario-first-nations-1.5157637
+Number of tags '<p>' 26
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Chap 12 - Ex 5
+
+#http://data.pr4e.org/romeo.txt
+import socket
+import re
+
+url = input('Enter URL: ')
+mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    mysock.connect((re.findall('http[s]?://([a-zA-Z0-9\.]*)/?', url)[0], 80))
+except:
+    print('URL not valid')
+    exit()
+cmd = f'GET {url} HTTP/1.0\r\n\r\n'.encode()
+mysock.send(cmd)
+readText = False
+bufferData = ''
+blockSize = 28
+while True:
+    data = mysock.recv(blockSize)
+    if len(bufferData) > 0:
+        bufferData = bufferData[blockSize+1:] + data
+    else:
+        bufferData = data
+    if len(data) < 1:
+        break
+    if re.search('\r\n\r\n([\s\S]*)', bufferData.decode()):
+        print(re.findall('\r\n\r\n([\s\S]*)', bufferData.decode())[0], end = '')
+        readText = True;
+    else:
+        if not readText: continue
+        print(data.decode(), end = '')
+mysock.close()
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#output
+
+Enter URL: http://data.pr4e.org/romeo.txt
+But soft what light through yonder window breaks
+It is the east and Juliet is the sun
+Arise fair sun and kill the envious moon
+Who is already sick and pale with grief
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
